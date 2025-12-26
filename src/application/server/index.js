@@ -31,6 +31,16 @@ app.get('/api/ping', (req, res) => res.json({ status: 'ok', time: new Date().toI
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('SERVER ERROR:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal Server Error',
+        error: err.message
+    });
+});
+
 // Health Check
 app.get('/', (req, res) => {
     res.send('PetCareX API is running...');
