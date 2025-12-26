@@ -29,13 +29,12 @@ VALUES
 (N'Gói tiêm nâng cao', 12, 10);
 
 --5
-INSERT INTO NHAN_VIEN (HoTen, NgaySinh, GioiTinh, LuongCoBan, ChucVu, MaCN)
+INSERT INTO SAN_PHAM (TenSP, LoaiSP, GiaBan, SoLuongTonKho)
 VALUES
-(N'Nguyễn Văn An', '1985-03-15', N'Nam', 20000000, N'BacSi', 1),
-(N'Trần Thị Bình', '1990-07-20', N'Nữ', 12000000, N'TiepTan', 1),
-(N'Lê Minh Châu', '1988-11-02', N'Nam', 18000000, N'BacSi', 2),
-(N'Phạm Thị Dung', '1995-05-12', N'Nữ', 10000000, N'BanHang', 3),
-(N'Võ Quốc Huy', '1982-01-10', N'Nam', 25000000, N'QuanLy', 1);
+(N'Thức ăn chó Royal Canin', N'Thức ăn', 350000, 100),
+(N'Thức ăn mèo Whiskas', N'Thức ăn', 280000, 120),
+(N'Sữa tắm thú cưng', N'Phụ kiện', 150000, 80),
+(N'Thuốc tẩy giun', N'Thuốc', 90000, 200);
 
 --6
 INSERT INTO NHAN_VIEN (HoTen, NgaySinh, GioiTinh, LuongCoBan, ChucVu, MaCN)
@@ -97,3 +96,17 @@ INSERT INTO DANH_GIA (MaKH, MaCN, DiemChatLuongDV, DiemThaiDoNV, MDHaiLongTT, Bi
 VALUES
 (1, 1, 5, 5, 5, N'Dịch vụ rất tốt, bác sĩ tận tình'),
 (2, 2, 4, 4, 4, N'Hài lòng với chất lượng khám');
+
+--15
+INSERT INTO LICH_SU_DIEU_DONG (MaNV, MaCN_Cu, MaCN_Moi, NgayChuyen) VALUES
+(1, 2, 1, '2023-01-01');
+
+UPDATE HD
+SET TongTien = ISNULL((SELECT SUM(SoLuong * DonGia) FROM CT_HOA_DON_SP WHERE MaHD = HD.MaHD), 0)
+             + ISNULL((SELECT SUM(KB.DonGia) FROM TT_KHAM_BENH KB JOIN CT_HOA_DON_DV DV ON KB.MaHDDV = DV.MaHDDV WHERE DV.MaHD = HD.MaHD), 0)
+             + ISNULL((SELECT SUM(TP.DonGia) FROM TT_TIEM_PHONG TP JOIN CT_HOA_DON_DV DV ON TP.MaHDDV = DV.MaHDDV WHERE DV.MaHD = HD.MaHD), 0)
+FROM HOA_DON HD;
+GO
+
+-- Kiểm tra kết quả
+SELECT * FROM HOA_DON;
