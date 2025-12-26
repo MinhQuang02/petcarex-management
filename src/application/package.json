@@ -9,7 +9,7 @@
     "scripts": {
         "install-all": "npm install",
         "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-        "build": "cd client && npm install && npm run build -- --outDir ../dist --emptyOutDir",
+        "build": "npm install && npm run build -w client -- --outDir ../dist --emptyOutDir",
         "start": "node server/index.js"
     },
     "devDependencies": {
