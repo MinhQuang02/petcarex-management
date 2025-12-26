@@ -16,7 +16,8 @@ export default function Login() {
             await login(username, password);
             navigate('/');
         } catch (err: any) {
-            setError('Invalid credentials. Try admin / 123456');
+            console.error(err);
+            setError(err.response?.data?.message || err.message || 'Connection failed');
         }
     };
 

@@ -27,6 +27,7 @@ app.use(cors({
 app.use(express.json());
 
 // Routes
+app.get('/api/ping', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
