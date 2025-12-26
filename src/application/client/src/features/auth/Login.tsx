@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Lock, User, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function Login() {
     const [username, setUsername] = useState('admin');
