@@ -1,0 +1,30 @@
+services:
+  # Backend Service
+  - type: web
+    name: petcarex-server
+    runtime: node
+    rootDir: src/application/server
+    # Ensure dependencies are installed. using npm ci or npm install
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false # User must provide this secret in the Render Dashboard
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+
+  # Frontend Service
+  - type: static
+    name: petcarex-client
+    rootDir: src/application/client
+    # Install dependencies and build
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: petcarex-server
+          property: url

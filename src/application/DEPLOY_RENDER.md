@@ -1,45 +1,66 @@
-# Deploy to Render
+# Hướng Dẫn Deploy Lên Render
 
-This guide outlines how to submit this **Monorepo** project to Render.com using a standard Web Service approach.
+Tài liệu này hướng dẫn chi tiết cách deploy ứng dụng (Client & Server) lên [Render](https://render.com) sử dụng file cấu hình `render.yaml` đã được tạo sẵn.
 
-## 1. Project Structure
-This is a monorepo with `client` and `server` directories.
-- `client`: Vite/React Frontend.
-- `server`: Express/Node Backend.
+## 1. Chuẩn Bị
 
-We will deploy them as **two separate services** on Render but they can live in the same Git repository.
+*   **Tài khoản Render**: Đăng ký tại [render.com](https://dashboard.render.com).
+*   **Git Repository**: Đảm bảo code của bạn đã được push lên GitHub hoặc GitLab/Bitbucket.
+*   **Database**: Bạn đang sử dụng Supabase (PostgreSQL). Đảm bảo bạn có `DATABASE_URL` (Connection String) của database.
 
-## 2. Server Deployment (Web Service)
-1.  **Dashboard**: Go to Render Dashboard -> New -> Web Service.
-2.  **Repository**: Connect your git repository.
-3.  **Root Directory**: Set this to `src/application/server`.
-4.  **Name**: e.g., `petcarex-server`.
-5.  **Environment**: Node.js.
-6.  **Build Command**: `npm install`.
-    *   *Note*: Since root is `src/application/server`, `npm install` runs in that folder.
-7.  **Start Command**: `npm start` (or `node index.js`).
-8.  **Environment Variables**:
-    *   `DATABASE_URL`: Connection string to your PostgreSQL URL (Use Supabase connection string).
-    *   `SUPABASE_URL`: Your Supabase Project URL.
-    *   `SUPABASE_KEY`: Your Supabase Anon Key.
-    *   `PORT`: `5000` (or leave default, Render usually sets this automatically to 10000, but make sure your `index.js` respects `process.env.PORT`).
+## 2. Cấu Trúc Deploy
 
-## 3. Client Deployment (Static Site)
-1.  **Dashboard**: Go to Render Dashboard -> New -> Static Site.
-2.  **Repository**: Connect the same repository.
-3.  **Root Directory**: Set this to `src/application/client`.
-4.  **Name**: e.g., `petcarex-client`.
-5.  **Build Command**: `npm install && npm run build`.
-    *   This will run `vite build` and output to `dist`.
-6.  **Publish Directory**: `dist`.
-7.  **Environment Variables**:
-    *   `VITE_API_URL`: The URL of your deployed server (e.g., `https://petcarex-server.onrender.com/api`).
-    *   *Important*: Render Environment Variables for Static Sites are utilized at **Build Time**. Ensure this variable is set before you trigger the build.
+Chúng ta sẽ deploy 2 dịch vụ riêng biệt được định nghĩa trong file `render.yaml` tại thư mục gốc của dự án:
 
-## 4. Database Setup (Supabase)
-Ensure your Supabase database has the tables created. You can run the queries found in `src/application/scripts.sql` in the Supabase SQL Editor.
+1.  **petcarex-server (Web Service)**: Backend Node.js.
+2.  **petcarex-client (Static Site)**: Frontend React/Vite.
 
-## 5. Troubleshooting
-*   **CORS**: Update `server/index.js` to allow the new client domain if you have strict CORS settings.
-    *   Currently, `cors()` is used which usually allows all. For production, you might want to restrict it to your client URL.
-*   **Port**: Your server listens on `process.env.PORT || 5000`. Render provides a `PORT` env var. This setup is compatible.
+Render sẽ tự động liên kết biến môi trường `VITE_API_URL` của Client trỏ tới URL của Server.
+
+## 3. Các Bước Thực Hiện
+
+### Bước 1: Kết nối Repository với Render
+
+1.  Truy cập [Render Dashboard](https://dashboard.render.com).
+2.  Chọn **New +** -> **Blueprint**.
+3.  Kết nối với tài khoản GitHub/GitLab của bạn và chọn repository chứa code này (`petcarex-management`).
+4.  Đặt tên cho Service instance (ví dụ: `petcarex-app`).
+
+### Bước 2: Cấu hình Biến Môi Trường
+
+Render sẽ tự động phát hiện file `render.yaml` và hiển thị các dịch vụ sẽ được tạo.
+Bạn sẽ thấy mục yêu cầu nhập **Environment Variables** cho `petcarex-server`:
+
+*   **DATABASE_URL**: Dán chuỗi kết nối PostgreSQL của bạn vào đây.
+    *   *Lưu ý*: Lấy giá trị này từ file `.env` hiện tại của bạn (`src/application/server/.env`).
+    *   Ví dụ: `postgresql://postgres.[user]:[password]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
+
+### Bước 3: Apply Blueprint
+
+*   Nhấn **Apply** hoặc **Create Blueprint**.
+*   Render sẽ bắt đầu build cả 2 dịch vụ cùng lúc.
+
+## 4. Kiểm Tra Trạng Thái
+
+### Server (`petcarex-server`)
+*   Theo dõi Logs của server để đảm bảo nó khởi động thành công (`Server running on port 10000`).
+*   Nếu có lỗi kết nối Database, kiểm tra lại `DATABASE_URL`.
+
+### Client (`petcarex-client`)
+*   Client sẽ được build (`npm run build`) và publish thư mục `dist`.
+*   Sau khi hoàn tất, Render sẽ cung cấp một URL (ví dụ: `https://petcarex-client.onrender.com`).
+
+## 5. Truy Cập Ứng Dụng
+
+*   Truy cập vào URL của **Client** do Render cung cấp.
+*   Client sẽ tự động gọi API tới Server thông qua cấu hình `VITE_API_URL` đã được setup tự động.
+
+## Lưu Ý Quan Trọng
+
+*   **CORS**: Server đã được cấu hình `cors({ origin: '*' })` nên Client có thể gọi API bình thường.
+*   **Build Lỗi**: Nếu Client build lỗi "Permission denied" với Vite, đoạn script build trong `package.json` đã được tôi sửa lại thành `vite build` chuẩn để khắc phục vấn đề này.
+*   **Routes**: Nếu bạn refresh trang ở Client và gặp lỗi 404, hãy đảm bảo cấu hình "Rewrite Rules" trên Render (cho Static Site) nếu cần thiết. Tuy nhiên, với Vite SPA mặc định, thường Render xử lý khá tốt. Nếu cần, vào tab **Redirects/Rewrites** của service Client trên Render:
+    *   Source: `/*`
+    *   Destination: `/index.html`
+    *   Status: `200`
+    *   Action: `Rewrite`
