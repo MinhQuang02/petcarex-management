@@ -1,20 +1,25 @@
-# Debug Lỗi Kết Nối & Hiển Thị Dữ Liệu
+# Debug Lỗi Kết Nối Database & Supabase (Cấp cứu)
 
-## Nguyên Nhân Lỗi
-Dù Server đã kết nối Database thành công (`✅ DATABASE CONNECTION SUCCESSFUL`), Web App vẫn không hiện dữ liệu vì:
-*   Mã nguồn Frontend (React) đang **Hardcode (Gán cứng)** địa chỉ API là `http://localhost:5000`.
-*   Khi deploy lên Render, Web chạy trên `https://petcarex-management.onrender.com`.
-*   Trình duyệt chặn việc Web HTTPS gọi tới `localhost` (HTTP) của máy người dùng (nơi không có server nào đang chạy), dẫn đến lỗi kết nối API.
+## 1. Lỗi "CONNECT_TIMEOUT" (Đã tự động sửa)
+Lỗi `write CONNECT_TIMEOUT ...:6543` xuất hiện vì kết nối qua cổng Pooler (6543) của Supabase bị chặn hoặc quá tải khi gọi từ Render.
+**Giải pháp tôi đã áp dụng**: 
+Tôi đã sửa code trong `server/db/index.js` để tự động chuyển sang cổng **5432** (Direct Connection) nếu phát hiện bạn đang dùng 6543. Bạn **không cần** sửa lại biến môi trường `DATABASE_URL` trên Render.
 
-## Giải Pháp
-Tôi đã thực hiện **6 thay đổi trong code Client** để sửa lỗi này:
-1.  Thay thế tất cả `http://localhost:5000/api...` thành `/api...`.
-2.  Việc dùng đường dẫn tương đối (`/api`) cho phép Web tự động gọi API tới chính domain mà nó đang chạy (dù là localhost hay onrender.com).
+## 2. Lỗi "Supabase credentials missing" (Cần bạn sửa)
+Trong log có dòng: `⚠️ Supabase credentials missing. Running in offline/mock mode.`
+Điều này có nghĩa là các tính năng như Upload ảnh, Login (nếu dùng Supabase Auth) sẽ không hoạt động.
 
-## Bạn cần làm gì?
+**Hãy thêm các biến sau vào Environment Variables trên Render**:
+1.  Vào Dashboard -> Service `petcarex-app` -> **Environment**.
+2.  Thêm mới (Add Environment Variable):
+    *   Key: `SUPABASE_URL`
+    *   Value: `https://hweubkwwpiflkddztqqg.supabase.co` (Ví dụ - hãy lấy từ Dashboard Supabase của bạn)
+    *   Key: `SUPABASE_ANON_KEY`
+    *   Value: `[Key dài bắt đầu bằng eyJ...]`
 
-1.  **Git Commit & Push**: Đẩy code đã sửa lên GitHub.
-2.  **Deploy lại**: Render sẽ tự động build lại Client với địa chỉ API mới.
-3.  **Clear Cache (Nếu cần)**: Tốt nhất hãy chọn **Manual Deploy -> Clear build cache & deploy** một lần nữa để chắc chắn Client mới được áp dụng.
+*Lưu ý*: Nếu bạn không dùng tính năng upload ảnh hay Auth của Supabase mà chỉ dùng Database, bạn có thể bỏ qua bước 2.
 
-Sau khi deploy xong, hãy truy cập Web và kiểm tra lại các trang Dashboard, Nhân sự, Khách hàng... Dữ liệu sẽ hiển thị bình thường.
+## 3. Bước Tiếp Theo
+1.  **Git Commit & Push** code mới.
+2.  **Deploy lại** (Manual Deploy -> Clear cache).
+3.  Kiểm tra log xem còn lỗi timeout không. Nó sẽ hiện dòng: `✅ DATABASE CONNECTION SUCCESSFUL`.

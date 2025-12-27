@@ -11,13 +11,24 @@ if (!connectionString) {
 }
 
 console.log('Initializing database connection...');
-// Mask the password for logging
-const maskedString = connectionString.replace(/:([^@]+)@/, ':****@');
-console.log(`DATABASE_URL: ${maskedString}`);
 
-const client = postgres(connectionString, {
-    prepare: false,
-    ssl: 'require' // Required for Supabase in production
+// Fix: Supabase Transaction Pooler (6543) often times out on Render.
+// We automatically switch to Session Mode (5432) for better stability in this Node enviroment.
+let realConnectionString = connectionString;
+if (connectionString.includes(':6543')) {
+    console.log('⚠️ Detected Transaction Pooler port (6543). Switching to Direct Connection (5432) for stability.');
+    realConnectionString = connectionString.replace(':6543', ':5432');
+}
+
+// Mask the password for logging
+const maskedString = realConnectionString.replace(/:([^@]+)@/, ':****@');
+console.log(`DATABASE_URL (Used): ${maskedString}`);
+
+const client = postgres(realConnectionString, {
+    prepare: false, // Keep false for compatibility
+    ssl: 'require',
+    connect_timeout: 30, // Increase timeout to 30s
+    keep_alive: 20
 });
 
 export const db = drizzle(client);
