@@ -5,7 +5,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import staffRoutes from './routes/staffRoutes.js';
+import servicesRoutes from './routes/servicesRoutes.js';
 import './config/supabase.js'; // Initialize Supabase config
+import { db } from './db/index.js';
+import { chiNhanh } from './db/schema.js';
 
 dotenv.config();
 
@@ -38,6 +42,26 @@ app.use(express.static(distPath));
 app.get('/api/ping', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/services', servicesRoutes);
+
+app.get('/api/test-connection', async (req, res) => {
+    try {
+        const result = await db.select().from(chiNhanh).limit(7);
+        res.json({
+            success: true,
+            data: result,
+            message: 'Database connection successful'
+        });
+    } catch (error) {
+        console.error('Database connection error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database connection failed',
+            error: error.message
+        });
+    }
+});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
