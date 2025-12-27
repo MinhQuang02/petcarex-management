@@ -1,18 +1,33 @@
--- Tạo Database
+USE master;
+GO
+
+-- 1. XÓA DB CŨ NẾU TỒN TẠI (Làm sạch hoàn toàn)
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'PetCareX')
+BEGIN
+    ALTER DATABASE PetCareX SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE PetCareX;
+END
+GO
+
+-- 2. TẠO DATABASE MỚI
 CREATE DATABASE PetCareX;
 GO
 USE PetCareX;
 GO
 
--- 1. Bảng Hạng Thành Viên
+-----------------------------------------------------------
+-- PHẦN 1: CÁC BẢNG DANH MỤC (MASTER DATA)
+-----------------------------------------------------------
+
+-- 1.1. Bảng Hạng Thành Viên
 CREATE TABLE HANG_THANH_VIEN (
     MaHang INT IDENTITY(1,1) PRIMARY KEY,
-    TenHang NVARCHAR(50) NOT NULL,
+    TenHang NVARCHAR(50) NOT NULL, -- Cơ bản, Thân thiết, VIP
     ChiTieuGiuHang DECIMAL(18,0) DEFAULT 0,
     ChiTieuDatHang DECIMAL(18,0) DEFAULT 0
 );
 
--- 2. Bảng Chi Nhánh
+-- 1.2. Bảng Chi Nhánh
 CREATE TABLE CHI_NHANH (
     MaCN INT IDENTITY(1,1) PRIMARY KEY,
     TenCN NVARCHAR(100) NOT NULL,
@@ -22,56 +37,73 @@ CREATE TABLE CHI_NHANH (
     TGDongCua TIME
 );
 
--- 3. Bảng Dịch Vụ (Danh mục loại dịch vụ)
+-- 1.3. Bảng Dịch Vụ (Danh mục loại dịch vụ)
 CREATE TABLE DICH_VU (
     MaDV INT IDENTITY(1,1) PRIMARY KEY,
-    LoaiDV NVARCHAR(100) NOT NULL -- Ví dụ: Khám bệnh, Tiêm phòng, Spa...
+    LoaiDV NVARCHAR(100) NOT NULL, -- Ví dụ: Khám bệnh, Tiêm phòng, Spa...
+    MoTa NVARCHAR(255)
 );
 
--- 4. Bảng Gói Tiêm
+-- 1.4. Bảng Dịch Vụ Cung Cấp (Chi nhánh nào có dịch vụ nào)
+CREATE TABLE DICH_VU_CUNG_CAP (
+    MaCN INT,
+    MaDV INT,
+    TrangThai BIT DEFAULT 1, -- 1: Đang hoạt động, 0: Ngưng
+    PRIMARY KEY (MaCN, MaDV),
+    FOREIGN KEY (MaCN) REFERENCES CHI_NHANH(MaCN),
+    FOREIGN KEY (MaDV) REFERENCES DICH_VU(MaDV)
+);
+
+-- 1.5. Bảng Gói Tiêm
 CREATE TABLE GOI_TIEM (
     MaGoi INT IDENTITY(1,1) PRIMARY KEY,
     TenGoi NVARCHAR(100) NOT NULL,
     ThoiGian INT, -- Số tháng hiệu lực
-    UuDai INT -- Phần trăm ưu đãi (VD: 10 nghĩa là 10%)
+    UuDai INT CHECK (UuDai >= 0 AND UuDai <= 100) -- Phần trăm ưu đãi
 );
 
--- 5. Bảng Sản Phẩm
+-- 1.6. Bảng Sản Phẩm
 CREATE TABLE SAN_PHAM (
     MaSP INT IDENTITY(1,1) PRIMARY KEY,
     TenSP NVARCHAR(100) NOT NULL,
     LoaiSP NVARCHAR(50), -- Thức ăn, Phụ kiện, Thuốc...
-    GiaBan DECIMAL(18,0) NOT NULL,
-    SoLuongTonKho INT DEFAULT 0
+    GiaBan DECIMAL(18,0) NOT NULL CHECK (GiaBan >= 0),
+    SoLuongTonKho INT DEFAULT 0 CHECK (SoLuongTonKho >= 0)
 );
 
--- 6. Bảng Nhân Viên
--- (Gộp các vai trò Bác sĩ, Tiếp tân, Quản lý vào đây để tối ưu)
+-----------------------------------------------------------
+-- PHẦN 2: QUẢN LÝ NHÂN SỰ & KHÁCH HÀNG
+-----------------------------------------------------------
+
+-- 2.1. Bảng Nhân Viên (Gộp chung tất cả vai trò)
 CREATE TABLE NHAN_VIEN (
     MaNV INT IDENTITY(1,1) PRIMARY KEY,
     HoTen NVARCHAR(100) NOT NULL,
     NgaySinh DATE,
     GioiTinh NVARCHAR(10),
+    SDT VARCHAR(15),
     NgayVaoLam DATE DEFAULT GETDATE(),
     LuongCoBan DECIMAL(18,0),
-    ChucVu NVARCHAR(50), -- 'BacSi', 'TiepTan', 'BanHang', 'QuanLy'
+    -- Phân loại nhân viên để dễ dàng Partition sau này
+    ChucVu NVARCHAR(50) CHECK (ChucVu IN (N'Bác sĩ', N'Tiếp tân', N'Bán hàng', N'Quản lý')), 
     MaCN INT,
     FOREIGN KEY (MaCN) REFERENCES CHI_NHANH(MaCN)
 );
 
--- 7. Bảng Lịch Sử Điều Động (Nhân viên chuyển chi nhánh)
+-- 2.2. Bảng Lịch Sử Điều Động
 CREATE TABLE LICH_SU_DIEU_DONG (
     MaDD INT IDENTITY(1,1) PRIMARY KEY,
     NgayChuyen DATE DEFAULT GETDATE(),
     MaNV INT,
-    MaCN_Cu INT, -- Chi nhánh cũ
-    MaCN_Moi INT, -- Chi nhánh mới (lấy từ bảng NHAN_VIEN hiện tại hoặc tham chiếu)
+    MaCN_Cu INT,
+    MaCN_Moi INT,
+    LyDo NVARCHAR(255),
     FOREIGN KEY (MaNV) REFERENCES NHAN_VIEN(MaNV),
     FOREIGN KEY (MaCN_Cu) REFERENCES CHI_NHANH(MaCN),
     FOREIGN KEY (MaCN_Moi) REFERENCES CHI_NHANH(MaCN)
 );
 
--- 8. Bảng Khách Hàng
+-- 2.3. Bảng Khách Hàng
 CREATE TABLE KHACH_HANG (
     MaKH INT IDENTITY(1,1) PRIMARY KEY,
     TenKH NVARCHAR(100) NOT NULL,
@@ -81,11 +113,11 @@ CREATE TABLE KHACH_HANG (
     GioiTinh NVARCHAR(10),
     NgaySinh DATE,
     DiemLoyalty INT DEFAULT 0,
-    MaHang INT DEFAULT 1, -- Mặc định hạng thấp nhất
+    MaHang INT DEFAULT 1, 
     FOREIGN KEY (MaHang) REFERENCES HANG_THANH_VIEN(MaHang)
 );
 
--- 9. Bảng Thú Cưng
+-- 2.4. Bảng Thú Cưng
 CREATE TABLE THU_CUNG (
     MaTC INT IDENTITY(1,1) PRIMARY KEY,
     TenTC NVARCHAR(50),
@@ -98,11 +130,16 @@ CREATE TABLE THU_CUNG (
     FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)
 );
 
--- 10. Bảng Hóa Đơn
+-----------------------------------------------------------
+-- PHẦN 3: GIAO DỊCH (HÓA ĐƠN & CHI TIẾT)
+-----------------------------------------------------------
+
+-- 3.1. Bảng Hóa Đơn
 CREATE TABLE HOA_DON (
     MaHD INT IDENTITY(1,1) PRIMARY KEY,
     NgayLap DATETIME DEFAULT GETDATE(),
-    TongTien DECIMAL(18,0) DEFAULT 0,
+    -- Tổng tiền có thể tính toán (Derived field), nhưng lưu lại để truy xuất nhanh
+    TongTien DECIMAL(18,0) DEFAULT 0, 
     HinhThucThanhToan NVARCHAR(50),
     MaCN INT,
     MaKH INT,
@@ -112,53 +149,55 @@ CREATE TABLE HOA_DON (
     FOREIGN KEY (MaNV) REFERENCES NHAN_VIEN(MaNV)
 );
 
--- 11. Bảng Chi Tiết Hóa Đơn - Sản Phẩm (Mua hàng)
+-- 3.2. Chi Tiết Hóa Đơn - Sản Phẩm (Bán hàng)
 CREATE TABLE CT_HOA_DON_SP (
     MaHDSP INT IDENTITY(1,1) PRIMARY KEY,
     MaHD INT,
     MaSP INT,
     SoLuong INT CHECK (SoLuong > 0),
-    DonGia DECIMAL(18,0), -- Lưu giá tại thời điểm bán
+    DonGia DECIMAL(18,0), -- Giá chốt tại thời điểm bán
+    ThanhTien AS (SoLuong * DonGia), -- Computed Column (Cột tính toán tự động)
     FOREIGN KEY (MaHD) REFERENCES HOA_DON(MaHD),
     FOREIGN KEY (MaSP) REFERENCES SAN_PHAM(MaSP)
 );
 
--- 12. Bảng Chi Tiết Hóa Đơn - Dịch Vụ (Lớp trung gian cho Khám/Tiêm)
--- Bảng này đại diện cho 1 dòng "Dịch vụ" trong hóa đơn
+-- 3.3. Chi Tiết Hóa Đơn - Dịch Vụ (Bảng Cha cho các dịch vụ)
+-- CẬP NHẬT: Đã đưa MaDV và DonGia về đây để quản lý tập trung
 CREATE TABLE CT_HOA_DON_DV (
     MaHDDV INT IDENTITY(1,1) PRIMARY KEY,
     MaHD INT,
-    FOREIGN KEY (MaHD) REFERENCES HOA_DON(MaHD)
+    MaDV INT NOT NULL, -- Xác định đây là dịch vụ gì (Khám hay Tiêm...)
+    DonGia DECIMAL(18,0) DEFAULT 0, -- Giá dịch vụ chốt tại thời điểm làm
+    FOREIGN KEY (MaHD) REFERENCES HOA_DON(MaHD),
+    FOREIGN KEY (MaDV) REFERENCES DICH_VU(MaDV)
 );
 
--- 13. Bảng Thông Tin Khám Bệnh
--- Kế thừa từ CT_HOA_DON_DV, lưu chi tiết chuyên môn
+-- 3.4. Thông Tin Khám Bệnh (Chi tiết chuyên môn - Extension của CT_HOA_DON_DV)
+-- CẬP NHẬT: Đã bỏ cột DonGia ở đây để tránh dư thừa
 CREATE TABLE TT_KHAM_BENH (
     MaLanKham INT IDENTITY(1,1) PRIMARY KEY,
-    MaHDDV INT UNIQUE, -- 1 dòng trong hóa đơn tương ứng 1 lần khám
+    MaHDDV INT UNIQUE, -- 1 dòng hóa đơn chỉ ứng với 1 lần khám (1-1)
     NgayKham DATETIME DEFAULT GETDATE(),
     TrieuChung NVARCHAR(MAX),
     ChuanDoan NVARCHAR(MAX),
     ToaThuoc NVARCHAR(MAX),
     NgayHenTaiKham DATE,
-    DonGia DECIMAL(18,0),
     MaTC INT,
-    BSPhuTrach INT, -- Bác sĩ
+    BSPhuTrach INT, -- Bác sĩ thực hiện
     FOREIGN KEY (MaHDDV) REFERENCES CT_HOA_DON_DV(MaHDDV),
     FOREIGN KEY (MaTC) REFERENCES THU_CUNG(MaTC),
     FOREIGN KEY (BSPhuTrach) REFERENCES NHAN_VIEN(MaNV)
 );
 
--- 14. Bảng Thông Tin Tiêm Phòng
--- Kế thừa từ CT_HOA_DON_DV
+-- 3.5. Thông Tin Tiêm Phòng (Chi tiết chuyên môn - Extension của CT_HOA_DON_DV)
+-- CẬP NHẬT: Đã bỏ cột DonGia ở đây
 CREATE TABLE TT_TIEM_PHONG (
     MaLanTiem INT IDENTITY(1,1) PRIMARY KEY,
-    MaHDDV INT UNIQUE, -- 1 dòng hóa đơn tương ứng 1 lần tiêm
+    MaHDDV INT UNIQUE, -- 1-1 relationship
     NgayTiem DATETIME DEFAULT GETDATE(),
     LoaiVacXin NVARCHAR(100),
     LieuLuong NVARCHAR(50),
-    DonGia DECIMAL(18,0),
-    MaGoi INT NULL, -- Nếu dùng gói
+    MaGoi INT NULL, -- Nếu dùng trong gói
     MaTC INT,
     NguoiTiem INT, -- Bác sĩ/Y tá
     FOREIGN KEY (MaHDDV) REFERENCES CT_HOA_DON_DV(MaHDDV),
@@ -167,19 +206,21 @@ CREATE TABLE TT_TIEM_PHONG (
     FOREIGN KEY (NguoiTiem) REFERENCES NHAN_VIEN(MaNV)
 );
 
--- 15. Bảng Đánh Giá
+-----------------------------------------------------------
+-- PHẦN 4: ĐÁNH GIÁ & FEEDBACK
+-----------------------------------------------------------
+
 CREATE TABLE DANH_GIA (
     MaDG INT IDENTITY(1,1) PRIMARY KEY,
-    MaKH INT, -- Khách hàng thực hiện đánh giá
-    MaCN INT, -- Chi nhánh được đánh giá
-    NgayDanhGia DATETIME DEFAULT GETDATE(), -- Nên có thêm ngày để thống kê chất lượng theo thời gian
+    MaKH INT,
+    MaCN INT,
+    NgayDanhGia DATETIME DEFAULT GETDATE(),
     DiemChatLuongDV INT CHECK (DiemChatLuongDV BETWEEN 1 AND 5),
     DiemThaiDoNV INT CHECK (DiemThaiDoNV BETWEEN 1 AND 5),
-    MDHaiLongTT INT CHECK (MDHaiLongTT BETWEEN 1 AND 5), -- Mức độ hài lòng tổng thể
+    MDHaiLongTT INT CHECK (MDHaiLongTT BETWEEN 1 AND 5),
     BinhLuan NVARCHAR(MAX),
-    
-    -- Tạo khóa ngoại liên kết đến Khách Hàng và Chi Nhánh
     FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH),
     FOREIGN KEY (MaCN) REFERENCES CHI_NHANH(MaCN)
 );
 GO
+
