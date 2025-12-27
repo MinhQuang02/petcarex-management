@@ -38,7 +38,7 @@ app.use(express.json());
 
 // Serve Static Files (React App)
 // Assumes build output is in ../dist (relative to server/index.js)
-const distPath = path.join(__dirname, '../dist');
+const distPath = path.join(__dirname, '../client/dist');
 app.use(express.static(distPath));
 
 // Routes

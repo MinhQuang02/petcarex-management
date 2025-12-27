@@ -1,30 +1,18 @@
 services:
-  # Backend Service
+  # Single Web Service (Monolith)
   - type: web
-    name: petcarex-server
+    name: petcarex-app
     runtime: node
-    rootDir: src/application/server
-    # Ensure dependencies are installed. using npm ci or npm install
-    buildCommand: npm install
+    rootDir: src/application
+    # Build command: Install root deps (if any), install client deps & build, install server deps
+    # The 'build' script in package.json now handles this chain.
+    buildCommand: npm run build
+    # Start command: Starts the Express server
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
         sync: false # User must provide this secret in the Render Dashboard
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-
-  # Frontend Service
-  - type: static
-    name: petcarex-client
-    rootDir: src/application/client
-    # Install dependencies and build
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: petcarex-server
-          property: url
+      # We don't need VITE_API_URL because the app is served from the same origin,
+      # and the client defaults to sending requests to /api, which works perfectly.
