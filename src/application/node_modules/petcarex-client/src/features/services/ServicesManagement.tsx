@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as Dialog from '@radix-ui/react-dialog';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 export default function ServicesManagement() {
     const [services, setServices] = useState<any[]>([]);

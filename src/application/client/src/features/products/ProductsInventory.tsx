@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as Dialog from '@radix-ui/react-dialog';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 export default function ProductsInventory() {
     const [products, setProducts] = useState<any[]>([]);
@@ -111,8 +111,8 @@ export default function ProductsInventory() {
                     key={i}
                     onClick={() => setCurrentPage(i)}
                     className={`min-w-[28px] h-7 text-xs font-medium border rounded transition flex items-center justify-center ${currentPage === i
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                         }`}
                 >
                     {i}
@@ -273,8 +273,8 @@ export default function ProductsInventory() {
                                             <td className="p-3 w-[35%] font-medium text-slate-800 text-sm">{prod.tensp}</td>
                                             <td className="p-3 w-[15%]">
                                                 <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-medium border ${prod.loaisp === 'Thuốc' ? 'bg-purple-50 text-purple-700 border-purple-100' :
-                                                        prod.loaisp === 'Thức ăn' ? 'bg-orange-50 text-orange-700 border-orange-100' :
-                                                            'bg-slate-100 text-slate-600 border-slate-200'
+                                                    prod.loaisp === 'Thức ăn' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                                                        'bg-slate-100 text-slate-600 border-slate-200'
                                                     }`}>
                                                     {prod.loaisp || 'Khác'}
                                                 </span>
@@ -282,8 +282,8 @@ export default function ProductsInventory() {
                                             <td className="p-3 w-[15%] text-right font-bold text-[#0056b3] text-sm tabular-nums tracking-wide">{formatCurrency(prod.giaban)}</td>
                                             <td className="p-3 w-[15%] text-center">
                                                 <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold ${prod.soluongtonkho < 10
-                                                        ? 'bg-red-50 text-red-600 border border-red-100'
-                                                        : 'text-slate-700'
+                                                    ? 'bg-red-50 text-red-600 border border-red-100'
+                                                    : 'text-slate-700'
                                                     }`}>
                                                     {prod.soluongtonkho < 10 && <AlertCircle size={10} />}
                                                     {prod.soluongtonkho}
