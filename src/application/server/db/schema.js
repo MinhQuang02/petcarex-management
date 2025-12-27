@@ -94,3 +94,10 @@ export const goiTiem = pgTable("goi_tiem", {
     thoigian: integer("thoigian"),
     uudai: integer("uudai"),
 });
+export const sanPham = pgTable("san_pham", {
+    masp: serial("masp").primaryKey(),
+    tensp: varchar("tensp").notNull(),
+    loaisp: varchar("loaisp"),
+    giaban: numeric("giaban").notNull(),
+    soluongtonkho: integer("soluongtonkho").default(0),
+});

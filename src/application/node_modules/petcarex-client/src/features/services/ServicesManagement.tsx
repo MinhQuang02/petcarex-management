@@ -203,7 +203,7 @@ export default function ServicesManagement() {
 
             {/* Left: Service Categories */}
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
-                <div className="p-4 border-b border-slate-200 bg-slate-50 shrink-0 flex flex-col gap-3">
+                <div className="p-4 border-b border-slate-200 bg-slate-50 shrink-0 flex flex-col gap-3 h-[124px] justify-between">
                     <div className="flex justify-between items-center">
                         <div>
                             <h3 className="font-bold text-[#333333]">Danh mục Dịch vụ</h3>
@@ -296,7 +296,7 @@ export default function ServicesManagement() {
 
             {/* Right: Vaccine Packages */}
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
-                <div className="p-4 border-b border-slate-200 bg-emerald-50 shrink-0 flex flex-col gap-3">
+                <div className="p-4 border-b border-slate-200 bg-emerald-50 shrink-0 flex flex-col gap-3 h-[124px] justify-between">
                     <div className="flex justify-between items-center">
                         <h3 className="font-bold text-emerald-800 flex items-center gap-2">
                             <Syringe size={18} /> Gói Tiêm & Ưu Đãi

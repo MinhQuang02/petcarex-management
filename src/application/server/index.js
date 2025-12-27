@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import staffRoutes from './routes/staffRoutes.js';
 import servicesRoutes from './routes/servicesRoutes.js';
+import productsRoutes from './routes/productsRoutes.js';
 import './config/supabase.js'; // Initialize Supabase config
 import { db } from './db/index.js';
 import { chiNhanh } from './db/schema.js';
@@ -44,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/services', servicesRoutes);
+app.use('/api/products', productsRoutes);
 
 app.get('/api/test-connection', async (req, res) => {
     try {
