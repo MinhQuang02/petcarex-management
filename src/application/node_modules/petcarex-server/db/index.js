@@ -12,13 +12,8 @@ if (!connectionString) {
 
 console.log('Initializing database connection...');
 
-// Fix: Supabase Transaction Pooler (6543) often times out on Render.
-// We automatically switch to Session Mode (5432) for better stability in this Node enviroment.
-let realConnectionString = connectionString;
-if (connectionString.includes(':6543')) {
-    console.log('⚠️ Detected Transaction Pooler port (6543). Switching to Direct Connection (5432) for stability.');
-    realConnectionString = connectionString.replace(':6543', ':5432');
-}
+// Use the connection string as provided in environment variables
+const realConnectionString = connectionString;
 
 // Mask the password for logging
 const maskedString = realConnectionString.replace(/:([^@]+)@/, ':****@');
