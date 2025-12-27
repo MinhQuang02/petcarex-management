@@ -10,12 +10,23 @@ export const chiNhanh = pgTable("chi_nhanh", {
     tgdongcua: time("tgdongcua"),
 });
 
+export const hangThanhVien = pgTable("hang_thanh_vien", {
+    mahang: serial("mahang").primaryKey(),
+    tenhang: varchar("tenhang").notNull(),
+    chitieugiuhang: numeric("chitieugiuhang").default(0),
+    chitieudathang: numeric("chitieudathang").default(0),
+});
+
 export const khachHang = pgTable("khach_hang", {
     makh: serial("makh").primaryKey(),
     tenkh: varchar("tenkh").notNull(),
     sdt: varchar("sdt"),
     email: varchar("email"),
+    cccd: varchar("cccd"),
+    gioitinh: varchar("gioitinh"),
+    ngaysinh: date("ngaysinh"),
     diemloyalty: integer("diemloyalty").default(0),
+    mahang: integer("mahang").default(1).references(() => hangThanhVien.mahang),
 });
 
 export const hoaDon = pgTable("hoa_don", {
@@ -100,4 +111,15 @@ export const sanPham = pgTable("san_pham", {
     loaisp: varchar("loaisp"),
     giaban: numeric("giaban").notNull(),
     soluongtonkho: integer("soluongtonkho").default(0),
+});
+
+export const thuCung = pgTable("thu_cung", {
+    matc: serial("matc").primaryKey(),
+    tentc: varchar("tentc"),
+    loai: varchar("loai"), // Cat, Dog
+    giong: varchar("giong"), // Breed
+    ngaysinh: date("ngaysinh"),
+    gioitinh: varchar("gioitinh"),
+    tinhtrangsuckhoe: text("tinhtrangsuckhoe"),
+    makh: integer("makh").references(() => khachHang.makh),
 });
