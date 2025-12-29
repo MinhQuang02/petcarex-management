@@ -1,4 +1,16 @@
 import express from 'express';
+
+// Global Crash Handlers
+process.on('uncaughtException', (err) => {
+    console.error('CRITICAL ERROR: Uncaught Exception:', err);
+    // Keep process alive if possible or exit
+    // process.exit(1); 
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('CRITICAL ERROR: Unhandled Rejection:', reason);
+});
+
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';

@@ -21,9 +21,13 @@ console.log(`DATABASE_URL (Used): ${maskedString}`);
 
 const client = postgres(realConnectionString, {
     prepare: false, // Keep false for compatibility
-    ssl: 'require',
+    ssl: { rejectUnauthorized: false }, // Allow self-signed certs or loose validation
     connect_timeout: 30, // Increase timeout to 30s
-    keep_alive: 20
+    keep_alive: 20,
+    debug: (conn, prompt, query, params) => {
+        // Optional: log queries if needed for debugging
+        // console.log(query);
+    }
 });
 
 export const db = drizzle(client);
